@@ -1,602 +1,1214 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumen Ascend Shaders</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Material Symbols Outlined for various icons (discord, telegram are no longer needed as their buttons are gone) -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=download,folder_open,play_arrow,settings" />
-    <style>
-        /* General styles for background and font */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5; /* Very light background */
-            color: #1f2937; /* Dark text */
-            position: relative; /* For canvas positioning */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#040d0a" />
+  <title>ROYAL LOUNGE — VIP Casino Lobby</title>
 
-        /* Custom Tailwind classes */
-        .gradient-text {
-            background: linear-gradient(45deg, #7c3aed, #14b8a6); /* Darker gradient for light background */
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+  <!-- Подключение шрифтов для премиальной типографики (с системными фолбэками) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-        /* Button animation */
-        .btn-glow {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
+  <!-- Telegram WebApp SDK (безопасно инициализируется только при наличии объекта Telegram.WebApp) -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-        .btn-glow:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(124, 58, 237, 0.4); /* Shadow from purple */
-        }
+  <style>
+    /* ==========================================================================
+       1. CSS-ПЕРЕМЕННЫЕ И ПАЛИТРА ПРЕМИАЛЬНОГО КАЗИНО
+       ========================================================================== */
+    :root {
+      /* Глубокий бархатный изумрудно-обсидиановый фон */
+      --bg-obsidian: #030807;
+      --bg-emerald-dark: #071b15;
+      --bg-emerald-mid: #0c2b21;
+      --bg-card: rgba(8, 22, 18, 0.78);
+      --bg-card-hover: rgba(12, 32, 26, 0.9);
 
-        .btn-glow::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: all 0.7s ease;
-        }
+      /* Полированное золото */
+      --gold-light: #FFF3B0;
+      --gold-bright: #F9E076;
+      --gold-main: #D4AF37;
+      --gold-deep: #9E791E;
+      --gold-dark: #5C430C;
+      --gold-gradient: linear-gradient(135deg, #BF953F 0%, #FCF6BA 28%, #D4AF37 55%, #FBF5B7 78%, #AA771C 100%);
+      --gold-btn-gradient: linear-gradient(135deg, #C99B2E 0%, #F9E076 48%, #D4AF37 70%, #A97A18 100%);
 
-        .btn-glow:hover::before {
-            left: 100%;
-        }
+      /* Рубиновые и неоновые акценты */
+      --ruby-main: #C41E3A;
+      --ruby-glow: rgba(220, 38, 68, 0.45);
+      --emerald-neon: #10B981;
+      --emerald-glow: rgba(16, 185, 129, 0.35);
+      --amber-glow: rgba(249, 224, 118, 0.35);
 
-        /* Card animation */
-        .card-hover-effect {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
+      /* Типографика */
+      --text-primary: #F8F5EC;
+      --text-secondary: #B7C4BE;
+      --text-muted: #7C9289;
+      --font-display: 'Cinzel', Georgia, 'Times New Roman', serif;
+      --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-        .card-hover-effect:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); /* Light shadow for light background */
-        }
+      /* Радиусы, тени и переходы */
+      --radius-card: 22px;
+      --radius-btn: 14px;
+      --border-gold-subtle: rgba(212, 175, 55, 0.24);
+      --border-gold-strong: rgba(249, 224, 118, 0.75);
+      --shadow-card: 0 18px 42px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 243, 176, 0.14);
+      --shadow-card-hover: 0 24px 55px rgba(0, 0, 0, 0.8), 0 0 32px rgba(212, 175, 55, 0.22), inset 0 1px 0 rgba(255, 243, 176, 0.32);
+      --transition-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+    }
 
-        /* Hero section animation (text) */
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    /* ==========================================================================
+       2. БАЗОВЫЕ СТИЛИ И ФОНОВОЕ ОФОРМЛЕНИЕ
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        .animate-fade-in-down {
-            animation: fadeInDown 1s ease-out forwards;
-        }
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
 
-        /* Hero section animation (button) */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      background-color: var(--bg-obsidian);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16, 76, 56, 0.55) 0%, transparent 65%),
+        radial-gradient(circle at 15% 85%, rgba(196, 30, 58, 0.14) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(212, 175, 55, 0.12) 0%, transparent 45%),
+        linear-gradient(180deg, #040f0c 0%, #061813 48%, #020605 100%);
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    }
 
-        .animate-fade-in-up {
-            animation: fadeInUp 1s ease-out forwards;
-            animation-delay: 0.5s; /* Delay for button */
-            opacity: 0; /* Initial state hidden */
-        }
+    /* Тонкий декоративный узор казино-сукна (ромбовидная сетка ар-деко) */
+    .felt-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.24;
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          rgba(212, 175, 55, 0.06) 0px,
+          rgba(212, 175, 55, 0.06) 1px,
+          transparent 1px,
+          transparent 26px
+        ),
+        repeating-linear-gradient(
+          -45deg,
+          rgba(212, 175, 55, 0.06) 0px,
+          rgba(212, 175, 55, 0.06) 1px,
+          transparent 1px,
+          transparent 26px
+        );
+      mask-image: radial-gradient(circle at 50% 35%, black 20%, transparent 90%);
+      -webkit-mask-image: radial-gradient(circle at 50% 35%, black 20%, transparent 90%);
+    }
 
-        /* Pro version gradient animation */
-        @keyframes gradient-animation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
+    /* Canvas для плавно мерцающих золотых частиц */
+    #goldParticles {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
 
-        .pro-card-bg-animated {
-            background: linear-gradient(90deg, #7c3aed, #14b8a6, #7c3aed);
-            background-size: 200% 200%;
-            animation: gradient-animation 8s ease infinite;
-        }
+    /* Основной контейнер страницы */
+    .lobby-wrapper {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 18px 36px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
 
-        /* Language dropdown */
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #ffffff;
-            min-width: 150px; /* Slightly wider for flags */
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 1.5rem; /* rounded-3xl */
-            right: 0;
-            top: 100%; /* Position below the button */
-            margin-top: 0.5rem; /* Space below button */
-        }
+    /* ==========================================================================
+       3. ШАПКА ЛОББИ (ЗОЛОТАЯ ВЫВЕСКА VIP-КАЗИНО)
+       ========================================================================== */
+    .lobby-header {
+      text-align: center;
+      margin-bottom: 30px;
+      opacity: 0;
+      transform: translateY(-16px);
+      animation: fadeDownIn 0.8s var(--transition-smooth) forwards;
+    }
 
-        /* Show dropdown on click */
-        .dropdown-content.show {
-            display: block;
-        }
+    /* Статус-плашка VIP-зала */
+    .vip-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(8, 26, 20, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.38);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.14), inset 0 0 12px rgba(212, 175, 55, 0.08);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-bright);
+      margin-bottom: 16px;
+    }
 
-        .dropdown-content a {
-            color: black;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: flex; /* Use flex for flag and text alignment */
-            align-items: center;
-            border-radius: 1.5rem; /* rounded-3xl */
-        }
+    .vip-pill-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald-neon);
+      box-shadow: 0 0 10px var(--emerald-neon), 0 0 18px var(--emerald-neon);
+      animation: pulseDot 2.2s infinite ease-in-out;
+    }
 
-        .dropdown-content a span {
-            margin-right: 8px; /* Space between flag and text */
-        }
+    /* Главная золотая вывеска */
+    .casino-sign {
+      position: relative;
+      display: inline-block;
+      padding: 4px 12px;
+    }
 
-        .dropdown-content a:hover {
-            background-color: #f1f1f1;
-        }
+    .casino-title {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 6vw, 3.35rem);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      line-height: 1.12;
+      background: var(--gold-gradient);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 4px 18px rgba(212, 175, 55, 0.35));
+      animation: goldShimmer 6s linear infinite;
+    }
 
-        /* Navbar dynamic styles */
-        #mainNav {
-            background-color: rgba(255, 255, 255, 0.9); /* Liquid glass effect */
-            backdrop-filter: blur(8px); /* Liquid glass effect */
-            padding: 1rem; /* Adjust padding as needed */
-            z-index: 50;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: width 0.3s ease-in-out, border-radius 0.3s ease-in-out, left 0.3s ease-in-out, transform 0.3s ease-in-out, top 0.3s ease-in-out;
-            position: fixed; /* Always fixed */
-            box-sizing: border-box; /* Ensure padding/border are included in width calculation */
-        }
+    .casino-subtitle {
+      margin-top: 10px;
+      font-size: clamp(0.85rem, 2.5vw, 1rem);
+      font-weight: 400;
+      color: var(--text-secondary);
+      letter-spacing: 0.04em;
+      max-width: 560px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
 
-        .nav-initial {
-            width: calc(100% - 8rem); /* Shorter length, adjust as needed */
-            max-width: 900px; /* Limit max width for larger screens */
-            border-radius: 9999px; /* Fully round */
-            left: 50%;
-            transform: translateX(-50%);
-            top: 1rem; /* Small margin from top */
-        }
+    /* Декоративный разделитель с карточными мастями */
+    .art-deco-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 18px auto 0;
+      max-width: 340px;
+    }
 
-        .nav-scrolled {
-            width: 100%; /* Full length */
-            border-radius: 0px; /* Sharp angles */
-            left: 0;
-            transform: translateX(0);
-            top: 0; /* Stick to top */
-        }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.7), transparent);
+    }
 
-        /* Scroll Reveal Animation */
-        .scroll-reveal {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-        }
+    .suits-ornament {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      color: var(--gold-main);
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
 
-        .scroll-reveal.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    </style>
+    .suits-ornament .suit-ruby {
+      color: #E63946;
+      text-shadow: 0 0 10px rgba(230, 57, 70, 0.55);
+    }
+
+    /* ==========================================================================
+       4. СЕТКА ИГРОВЫХ КАРТОЧЕК (MOBILE-FIRST -> 3 КОЛОНКИ НА ДЕСКТОПЕ)
+       ========================================================================== */
+    .games-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      width: 100%;
+      margin: auto 0;
+    }
+
+    /* Карточка игры */
+    .game-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 26px 22px 24px;
+      border-radius: var(--radius-card);
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold-subtle);
+      box-shadow: var(--shadow-card);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow: hidden;
+      cursor: pointer;
+      transition:
+        transform 0.38s var(--transition-smooth),
+        border-color 0.35s ease,
+        box-shadow 0.38s var(--transition-smooth),
+        background-color 0.35s ease;
+
+      /* Начальное состояние для плавного появления */
+      opacity: 0;
+      transform: translateY(28px) scale(0.98);
+      animation: cardReveal 0.75s var(--transition-smooth) forwards;
+    }
+
+    .game-card:nth-child(1) { animation-delay: 0.12s; }
+    .game-card:nth-child(2) { animation-delay: 0.24s; }
+    .game-card:nth-child(3) { animation-delay: 0.36s; }
+
+    /* Интерактивное световое пятно, следующее за курсором */
+    .game-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(
+        380px circle at var(--mouse-x, 50%) var(--mouse-y, 20%),
+        rgba(249, 224, 118, 0.13),
+        transparent 60%
+      );
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Тонкая верхняя золотая линия-отблеск */
+    .game-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 16%;
+      right: 16%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-bright), transparent);
+      opacity: 0.45;
+      transition: opacity 0.35s ease, left 0.35s ease, right 0.35s ease;
+      pointer-events: none;
+    }
+
+    /* Угловые декоративные элементы ар-деко */
+    .corner-accent {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-color: rgba(212, 175, 55, 0.45);
+      border-style: solid;
+      pointer-events: none;
+      transition: border-color 0.35s ease, transform 0.35s ease;
+      z-index: 1;
+    }
+
+    .corner-tl { top: 10px; left: 10px; border-width: 1.5px 0 0 1.5px; border-top-left-radius: 6px; }
+    .corner-tr { top: 10px; right: 10px; border-width: 1.5px 1.5px 0 0; border-top-right-radius: 6px; }
+    .corner-bl { bottom: 10px; left: 10px; border-width: 0 0 1.5px 1.5px; border-bottom-left-radius: 6px; }
+    .corner-br { bottom: 10px; right: 10px; border-width: 0 1.5px 1.5px 0; border-bottom-right-radius: 6px; }
+
+    /* Ховер-эффект на десктопах и поддерживающих устройствах */
+    @media (hover: hover) {
+      .game-card:hover {
+        transform: translateY(-8px) scale(1.015);
+        border-color: var(--border-gold-strong);
+        background: var(--bg-card-hover);
+        box-shadow: var(--shadow-card-hover);
+      }
+
+      .game-card:hover::before {
+        opacity: 1;
+      }
+
+      .game-card:hover::after {
+        opacity: 1;
+        left: 6%;
+        right: 6%;
+      }
+
+      .game-card:hover .corner-accent {
+        border-color: var(--gold-bright);
+      }
+
+      .game-card:hover .icon-medallion {
+        transform: scale(1.06);
+        box-shadow: 0 0 34px var(--card-accent-glow, var(--amber-glow)), inset 0 0 18px rgba(249, 224, 118, 0.25);
+      }
+
+      .game-card[data-game="roulette"]:hover .roulette-wheel-spin {
+        transform: rotate(90deg);
+      }
+    }
+
+    /* Тематические оттенки подсветки для каждой карточки */
+    .game-card[data-game="roulette"] { --card-accent-glow: rgba(220, 38, 68, 0.38); }
+    .game-card[data-game="horse_racing"] { --card-accent-glow: rgba(249, 224, 118, 0.38); }
+    .game-card[data-game="poker"] { --card-accent-glow: rgba(16, 185, 129, 0.36); }
+
+    /* Контентная область карточки */
+    .card-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Верхний бейдж игры */
+    .game-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      background: rgba(4, 14, 11, 0.72);
+      color: var(--gold-bright);
+    }
+
+    .game-badge.badge-ruby {
+      border-color: rgba(230, 57, 70, 0.48);
+      color: #FF8A94;
+      background: rgba(196, 30, 58, 0.14);
+    }
+
+    .game-badge.badge-emerald {
+      border-color: rgba(16, 185, 129, 0.48);
+      color: #6EE7B7;
+      background: rgba(16, 185, 129, 0.14);
+    }
+
+    /* Медальон для SVG-иконки */
+    .icon-medallion {
+      position: relative;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      background: radial-gradient(circle at 30% 25%, rgba(28, 60, 48, 0.85), rgba(5, 14, 11, 0.96) 72%);
+      border: 1.5px solid rgba(212, 175, 55, 0.55);
+      box-shadow:
+        0 10px 26px rgba(0, 0, 0, 0.55),
+        0 0 22px var(--card-accent-glow, var(--amber-glow)),
+        inset 0 0 16px rgba(212, 175, 55, 0.15);
+      transition: transform 0.45s var(--transition-smooth), box-shadow 0.45s ease;
+    }
+
+    .icon-medallion svg {
+      width: 60px;
+      height: 60px;
+      display: block;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55));
+    }
+
+    .roulette-wheel-spin {
+      transform-origin: center;
+      transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Заголовок и описание игры */
+    .game-title {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .game-desc {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      max-width: 280px;
+    }
+
+    /* ==========================================================================
+       5. ПРЕМИАЛЬНАЯ ЗОЛОТАЯ КНОПКА «ИГРАТЬ» С БЛИКОМ И ТАКТИЛЬНОЙ ОТДАЧЕЙ
+       ========================================================================== */
+    .play-btn {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      min-height: 52px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: var(--radius-btn);
+      background: var(--gold-btn-gradient);
+      color: #1A1202;
+      font-family: var(--font-sans);
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      overflow: hidden;
+      box-shadow:
+        0 8px 22px rgba(212, 175, 55, 0.32),
+        0 2px 4px rgba(0, 0, 0, 0.45),
+        inset 0 1px 1px rgba(255, 255, 255, 0.72),
+        inset 0 -2px 4px rgba(120, 82, 10, 0.45);
+      transition:
+        transform 0.18s var(--transition-smooth),
+        box-shadow 0.25s ease,
+        filter 0.25s ease;
+      user-select: none;
+    }
+
+    /* Автоматический диагональный блик на золотой кнопке */
+    .play-btn::before {
+      content: "";
+      position: absolute;
+      top: -20%;
+      left: -130%;
+      width: 75%;
+      height: 140%;
+      background: linear-gradient(
+        115deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.15) 35%,
+        rgba(255, 255, 255, 0.72) 50%,
+        rgba(255, 255, 255, 0.15) 65%,
+        transparent 100%
+      );
+      transform: skewX(-20deg);
+      animation: btnSheen 4.4s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    .game-card:nth-child(2) .play-btn::before { animation-delay: 0.9s; }
+    .game-card:nth-child(3) .play-btn::before { animation-delay: 1.8s; }
+
+    /* Вспышка при нажатии */
+    .play-btn .btn-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.85) 0%, transparent 70%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+
+    .play-btn.is-pressed .btn-flash {
+      opacity: 1;
+      transition: opacity 0.06s ease;
+    }
+
+    @media (hover: hover) {
+      .play-btn:hover {
+        filter: brightness(1.07);
+        box-shadow:
+          0 10px 28px rgba(249, 224, 118, 0.48),
+          0 0 18px rgba(212, 175, 55, 0.4),
+          inset 0 1px 2px rgba(255, 255, 255, 0.85);
+      }
+    }
+
+    .play-btn:active,
+    .play-btn.is-pressed {
+      transform: scale(0.96);
+      box-shadow:
+        0 4px 12px rgba(212, 175, 55, 0.28),
+        inset 0 2px 6px rgba(92, 67, 12, 0.5);
+    }
+
+    .play-btn:focus-visible {
+      outline: 2px solid var(--gold-light);
+      outline-offset: 3px;
+    }
+
+    .play-btn-arrow {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.25s var(--transition-smooth);
+    }
+
+    @media (hover: hover) {
+      .play-btn:hover .play-btn-arrow {
+        transform: translateX(4px);
+      }
+    }
+
+    /* ==========================================================================
+       6. ПОДВАЛ И УВЕДОМЛЕНИЕ О ПЕРЕХОДЕ
+       ========================================================================== */
+    .lobby-footer {
+      margin-top: 34px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(212, 175, 55, 0.14);
+      text-align: center;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      animation: fadeUpIn 0.8s var(--transition-smooth) 0.5s forwards;
+    }
+
+    .footer-brand {
+      color: var(--gold-main);
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    /* Ненавязчивое всплывающее уведомление (тост) при переходе */
+    .toast-notice {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%) translateY(24px);
+      z-index: 50;
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: rgba(6, 20, 16, 0.94);
+      border: 1px solid rgba(249, 224, 118, 0.55);
+      color: var(--gold-light);
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 18px rgba(212, 175, 55, 0.22);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease, transform 0.28s var(--transition-smooth);
+      white-space: nowrap;
+    }
+
+    .toast-notice.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ==========================================================================
+       7. АДАПТИВНОСТЬ (ПЛАНШЕТЫ И ДЕСКТОП — 3 КОЛОНКИ)
+       ========================================================================== */
+    @media (min-width: 640px) {
+      .lobby-wrapper {
+        padding: 38px 28px 42px;
+      }
+
+      .lobby-header {
+        margin-bottom: 40px;
+      }
+
+      .games-grid {
+        gap: 24px;
+      }
+    }
+
+    @media (min-width: 920px) {
+      .lobby-wrapper {
+        padding: 48px 32px 44px;
+      }
+
+      .games-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 28px;
+        align-items: stretch;
+      }
+
+      .game-card {
+        padding: 34px 26px 28px;
+      }
+
+      .icon-medallion {
+        width: 108px;
+        height: 108px;
+        margin-bottom: 24px;
+      }
+
+      .icon-medallion svg {
+        width: 66px;
+        height: 66px;
+      }
+
+      .game-title {
+        font-size: 1.55rem;
+      }
+    }
+
+    /* ==========================================================================
+       8. КЛЮЧЕВЫЕ КАДРЫ АНИМАЦИЙ
+       ========================================================================== */
+    @keyframes fadeDownIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeUpIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes cardReveal {
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes goldShimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.35); opacity: 0.65; }
+    }
+
+    @keyframes btnSheen {
+      0%, 58% { left: -130%; }
+      82%, 100% { left: 145%; }
+    }
+
+    /* Уважение системной настройки снижения анимаций */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .lobby-header, .game-card, .lobby-footer {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav id="mainNav" class="bg-white bg-opacity-90 backdrop-blur-sm p-4 z-50 shadow-md flex justify-between items-center">
-        <div class="flex justify-between items-center w-full px-4">
-            <a href="#" class="text-2xl font-bold gradient-text" data-key="siteTitle">Lumen Ascend Shaders</a>
-            <div class="flex items-center space-x-4">
-                <a href="#versions" class="text-gray-700 hover:text-gray-900 transition duration-300" data-key="navVersions">Versions</a>
-                <!-- Removed Contact Link -->
+  <!-- Декоративный узор бархатного сукна -->
+  <div class="felt-pattern" aria-hidden="true"></div>
 
-                <!-- Language Dropdown -->
-                <div class="relative dropdown">
-                    <button id="languageToggle" class="flex items-center text-gray-700 hover:text-gray-900 transition duration-300 p-2 rounded-full focus:outline-none">
-                        <span data-key="languageButtonText">Language</span>
-                    </button>
-                    <div id="languageDropdownContent" class="dropdown-content">
-                        <a href="#" class="lang-option" data-lang="en">🇬🇧 English</a>
-                        <a href="#" class="lang-option" data-lang="ru">🇷🇺 Русский</a>
-                        <a href="#" class="lang-option" data-lang="uk">🇺🇦 Українська</a>
-                        <a href="#" class="lang-option" data-lang="de">🇩🇪 Deutsch</a>
-                        <a href="#" class="lang-option" data-lang="fr">🇫🇷 Français</a>
-                        <a href="#" class="lang-option" data-lang="es-MX">🇲🇽 Español (México)</a>
-                    </div>
-                </div>
-            </div>
+  <!-- Слой лёгких мерцающих золотых частиц -->
+  <canvas id="goldParticles" aria-hidden="true"></canvas>
+
+  <!-- Основной контент VIP-лобби -->
+  <div class="lobby-wrapper">
+    <!-- Шапка в стиле золотой вывески Монте-Карло / Лас-Вегаса -->
+    <header class="lobby-header">
+      <div class="vip-pill">
+        <span class="vip-pill-dot" aria-hidden="true"></span>
+        <span>VIP-Зал Открыт &bull; 24/7</span>
+      </div>
+
+      <div class="casino-sign">
+        <h1 class="casino-title">Royal Lounge</h1>
+      </div>
+
+      <p class="casino-subtitle">
+        Атмосфера элитного клуба Монте-Карло и Лас-Вегаса. Выберите стол и начните игру в одно касание.
+      </p>
+
+      <div class="art-deco-divider" aria-hidden="true">
+        <span class="divider-line"></span>
+        <span class="suits-ornament">
+          <span>&spades;</span>
+          <span class="suit-ruby">&hearts;</span>
+          <span>&clubs;</span>
+          <span class="suit-ruby">&diams;</span>
+        </span>
+        <span class="divider-line"></span>
+      </div>
+    </header>
+
+    <!-- Сетка с тремя игровыми карточками -->
+    <main class="games-grid" aria-label="Выбор игры">
+
+      <!-- КАРТОЧКА 1: РУЛЕТКА -->
+      <article class="game-card" data-game="roulette" data-url="https://t.me/LollipopAIBot/roulette">
+        <span class="corner-accent corner-tl" aria-hidden="true"></span>
+        <span class="corner-accent corner-tr" aria-hidden="true"></span>
+        <span class="corner-accent corner-bl" aria-hidden="true"></span>
+        <span class="corner-accent corner-br" aria-hidden="true"></span>
+
+        <div class="card-content">
+          <span class="game-badge badge-ruby">Европейская &bull; x36</span>
+
+          <div class="icon-medallion" aria-hidden="true">
+            <!-- Векторная SVG-иконка колеса рулетки -->
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="goldRing" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFF2B2"/>
+                  <stop offset="50%" stop-color="#D4AF37"/>
+                  <stop offset="100%" stop-color="#8A6112"/>
+                </linearGradient>
+              </defs>
+              <!-- Внешний золотой обод -->
+              <circle cx="32" cy="32" r="28" fill="#121212" stroke="url(#goldRing)" stroke-width="3.5"/>
+              <!-- Вращающийся барабан -->
+              <g class="roulette-wheel-spin">
+                <!-- Сектора: красные, чёрные и зелёный зеро -->
+                <circle cx="32" cy="32" r="22" fill="#0B0F0E" stroke="#D4AF37" stroke-width="1.2"/>
+                <path d="M32 10 A22 22 0 0 1 43 13 L32 32 Z" fill="#10B981"/>
+                <path d="M43 13 A22 22 0 0 1 51 21 L32 32 Z" fill="#C41E3A"/>
+                <path d="M51 21 A22 22 0 0 1 54 32 L32 32 Z" fill="#151918"/>
+                <path d="M54 32 A22 22 0 0 1 51 43 L32 32 Z" fill="#C41E3A"/>
+                <path d="M51 43 A22 22 0 0 1 43 51 L32 32 Z" fill="#151918"/>
+                <path d="M43 51 A22 22 0 0 1 32 54 L32 32 Z" fill="#C41E3A"/>
+                <path d="M32 54 A22 22 0 0 1 21 51 L32 32 Z" fill="#151918"/>
+                <path d="M21 51 A22 22 0 0 1 13 43 L32 32 Z" fill="#C41E3A"/>
+                <path d="M13 43 A22 22 0 0 1 10 32 L32 32 Z" fill="#151918"/>
+                <path d="M10 32 A22 22 0 0 1 13 21 L32 32 Z" fill="#C41E3A"/>
+                <path d="M13 21 A22 22 0 0 1 21 13 L32 32 Z" fill="#151918"/>
+                <path d="M21 13 A22 22 0 0 1 32 10 L32 32 Z" fill="#C41E3A"/>
+                <!-- Золотое внутреннее кольцо и спицы -->
+                <circle cx="32" cy="32" r="14" fill="#141C19" stroke="url(#goldRing)" stroke-width="2"/>
+                <line x1="32" y1="20" x2="32" y2="44" stroke="url(#goldRing)" stroke-width="2.2" stroke-linecap="round"/>
+                <line x1="20" y1="32" x2="44" y2="32" stroke="url(#goldRing)" stroke-width="2.2" stroke-linecap="round"/>
+                <circle cx="32" cy="32" r="4.5" fill="url(#goldRing)"/>
+              </g>
+              <!-- Шарик рулетки -->
+              <circle cx="46.5" cy="18.5" r="2.6" fill="#FFFFFF" stroke="#D4AF37" stroke-width="0.6"/>
+            </svg>
+          </div>
+
+          <h2 class="game-title">Рулетка</h2>
+          <p class="game-desc">
+            Классическое колесо фортуны. Делайте ставки на цвет, сектор или счастливое число.
+          </p>
         </div>
-    </nav>
 
-    <!-- Main Content Wrapper (no longer needed as contact page is removed, but kept for structural clarity) -->
-    <div id="mainContentWrapper">
-        <!-- Hero Section -->
-        <section id="hero" class="relative h-screen flex items-center justify-center text-center bg-cover bg-center">
-            <div class="absolute inset-0 bg-white opacity-70"></div> <!-- Light translucent overlay -->
-            <div class="relative z-10 p-8 rounded-3xl max-w-4xl mx-auto bg-white bg-opacity-80 shadow-xl">
-                <h1 class="text-6xl md:text-7xl font-extrabold gradient-text leading-tight mb-6 animate-fade-in-down" data-key="heroTitle">
-                    Lumen Ascend Shaders
-                </h1>
-                <p class="text-xl md:text-2xl text-gray-700 mb-8 animate-fade-in-down" style="animation-delay: 0.3s;" data-key="heroSubtitle">
-                    Transform your Minecraft world with incredible graphics and realism.
-                </p>
-                <a href="#versions" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-full shadow-lg btn-glow animate-fade-in-up" data-key="heroButton">
-                    Choose Version
-                </a>
-            </div>
-        </section>
+        <a
+          href="https://t.me/LollipopAIBot/roulette"
+          class="play-btn"
+          data-game-name="Рулетка"
+          data-tg-link="https://t.me/LollipopAIBot/roulette"
+          aria-label="Играть в Рулетку"
+        >
+          <span class="btn-flash" aria-hidden="true"></span>
+          <span>Играть</span>
+          <svg class="play-btn-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M4.5 10H15.5M15.5 10L11 5.5M15.5 10L11 14.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </article>
 
-        <!-- About Us Section -->
-        <section id="about" class="py-20 bg-white rounded-3xl mx-4 my-8 shadow-xl scroll-reveal">
-            <div class="container mx-auto px-6 text-center">
-                <h2 class="text-5xl font-bold gradient-text mb-10" data-key="aboutTitle">About Lumen Ascend Shaders</h2>
-                <p class="text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed" data-key="aboutText">
-                    We create high-quality shaders that completely change the visual experience in Minecraft.
-                    Our goal is to bring stunning dynamic lighting, realistic water, and atmospheric effects to the game,
-                    allowing you to enjoy beauty without compromise.
-                </p>
-            </div>
-        </section>
+      <!-- КАРТОЧКА 2: СКАЧКИ (СТАВКИ) -->
+      <article class="game-card" data-game="horse_racing" data-url="https://t.me/LollipopAIBot/horse_racing">
+        <span class="corner-accent corner-tl" aria-hidden="true"></span>
+        <span class="corner-accent corner-tr" aria-hidden="true"></span>
+        <span class="corner-accent corner-bl" aria-hidden="true"></span>
+        <span class="corner-accent corner-br" aria-hidden="true"></span>
 
-        <!-- Shader Versions Section -->
-        <section id="versions" class="py-20 bg-gray-100 rounded-3xl mx-4 my-8 shadow-xl scroll-reveal">
-            <div class="container mx-auto px-6">
-                <h2 class="text-5xl font-bold gradient-text text-center mb-12" data-key="versionsTitle">Our Shader Versions</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-stretch"> <!-- Use items-stretch for equal height cards -->
-                    <!-- Lite Version -->
-                    <div class="bg-white p-8 rounded-3xl shadow-lg card-hover-effect border border-purple-400 flex flex-col">
-                        <div class="text-6xl mb-4 text-purple-500 text-center">✨</div>
-                        <h3 class="text-4xl font-semibold text-gray-900 mb-4 text-center" data-key="liteVersionTitle">Lite Version</h3>
-                        <p class="text-lg text-gray-700 mb-6 text-center flex-grow" data-key="liteVersionDesc">
-                            Perfect for players with less powerful systems.
-                            Provides improved lighting, soft shadows, and atmospheric effects
-                            without significant performance impact.
-                        </p>
-                        <ul class="list-disc list-inside text-gray-600 mb-6 space-y-2">
-                            <li data-key="liteFeature1">Optimized performance</li>
-                            <li data-key="liteFeature2">Basic dynamic lighting</li>
-                            <li data-key="liteFeature3">Improved clouds and sky</li>
-                            <li data-key="liteFeature4">Soft shadows</li>
-                        </ul>
-                        <div class="text-center mt-auto"> <!-- mt-auto pushes button to bottom -->
-                            <a href="#" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow-md btn-glow" data-key="downloadLite">
-                                Download Lite
-                            </a>
-                        </div>
-                    </div>
+        <div class="card-content">
+          <span class="game-badge">Гран-При &bull; Live</span>
 
-                    <!-- Pro Version -->
-                    <div class="bg-white p-8 rounded-3xl shadow-lg card-hover-effect border border-teal-400 flex flex-col pro-card-bg-animated">
-                        <div class="text-6xl mb-4 text-teal-500 text-center">💎</div>
-                        <h3 class="text-4xl font-semibold text-gray-900 mb-4 text-center" data-key="proVersionTitle">Pro Version</h3>
-                        <p class="text-lg text-gray-700 mb-6 text-center flex-grow" data-key="proVersionDesc">
-                            For those seeking maximum realism and visual splendor.
-                            Includes all advanced features for a complete immersion.
-                        </p>
-                        <ul class="list-disc list-inside text-gray-600 mb-6 space-y-2">
-                            <li data-key="proFeature1">Full dynamic lighting and global illumination</li>
-                            <li data-key="proFeature2">Advanced realistic water (waves, reflections, refractions)</li>
-                            <li data-key="proFeature3">Volumetric clouds and fog</li>
-                            <li data-key="proFeature4">Animated vegetation (grass, foliage)</li>
-                            <li data-key="proFeature5">Extended sky effects (sunsets, auroras)</li>
-                        </ul>
-                        <div class="text-center mt-auto"> <!-- mt-auto pushes button to bottom -->
-                            <a href="#" class="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full text-lg shadow-md btn-glow" data-key="downloadPro">
-                                Download Pro
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+          <div class="icon-medallion" aria-hidden="true">
+            <!-- Векторная SVG-иконка: кубок и золотая скаковая лошадь -->
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="goldTrophy" x1="12" y1="8" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFF5C0"/>
+                  <stop offset="45%" stop-color="#F2CE63"/>
+                  <stop offset="100%" stop-color="#9A7016"/>
+                </linearGradient>
+              </defs>
+              <!-- Лавровый венок по бокам -->
+              <path d="M16 44C10 38 9 28 13 20" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 4"/>
+              <path d="M48 44C54 38 55 28 51 20" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 4"/>
+              <!-- Золотой силуэт скакуна (конь) -->
+              <path
+                d="M22 46C22 39 24.5 34 28 30.5C25.5 30 23.2 28.8 22 27.5C20.5 29.2 18.2 29.5 16.5 28.4C15.3 27.6 15.2 25.8 16.3 24.7L22.5 18.5C23.6 14.8 26.8 12 31.2 11.4L34.5 9L35.4 12.2C41.8 13.8 46.5 19.6 46.5 27.2C46.5 34.4 42.8 40.6 42.8 46H22Z"
+                fill="url(#goldTrophy)"
+                stroke="#4A3408"
+                stroke-width="1.2"
+                stroke-linejoin="round"
+              />
+              <!-- Деталь гривы и глаза -->
+              <path d="M35.5 16.5C39.8 18.5 42.2 23 41.8 29.5" stroke="#FFF6C9" stroke-width="1.6" stroke-linecap="round" opacity="0.75"/>
+              <circle cx="25.5" cy="21" r="1.4" fill="#0B1914"/>
+              <!-- Постамент кубка -->
+              <rect x="17" y="46" width="30" height="4.5" rx="2.2" fill="url(#goldTrophy)"/>
+              <rect x="13" y="51.5" width="38" height="4.5" rx="2.2" fill="#8E6716" stroke="#F9E076" stroke-width="0.8"/>
+            </svg>
+          </div>
 
-        <!-- Footer -->
-        <footer class="bg-white bg-opacity-90 backdrop-blur-sm p-8 text-center rounded-t-3xl mx-4 mb-4 shadow-md">
-            <p class="text-gray-600" data-key="footerCopyright">&copy; 2025 Lumen Ascend Shaders. All rights reserved.</p>
-            <p class="text-gray-600" data-key="footerDisclaimer">The project is under development.</p>
-        </footer>
-    </div> <!-- End of mainContentWrapper -->
+          <h2 class="game-title">Скачки (Ставки)</h2>
+          <p class="game-desc">
+            Королевское дерби и высокие коэффициенты. Выберите фаворита и заберите главный кубок.
+          </p>
+        </div>
 
-    <!-- Removed Contact Page Section -->
+        <a
+          href="https://t.me/LollipopAIBot/horse_racing"
+          class="play-btn"
+          data-game-name="Скачки (Ставки)"
+          data-tg-link="https://t.me/LollipopAIBot/horse_racing"
+          aria-label="Играть в Скачки (Ставки)"
+        >
+          <span class="btn-flash" aria-hidden="true"></span>
+          <span>Играть</span>
+          <svg class="play-btn-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M4.5 10H15.5M15.5 10L11 5.5M15.5 10L11 14.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </article>
 
-    <script>
-        // --- Language Translation Logic ---
-        const translations = {
-            en: {
-                siteTitle: "Lumen Ascend Shaders",
-                navVersions: "Versions",
-                // navContact: "Contact", // Removed
-                languageButtonText: "Language",
-                heroTitle: "Lumen Ascend Shaders",
-                heroSubtitle: "Transform your Minecraft world with incredible graphics and realism.",
-                heroButton: "Choose Version",
-                aboutTitle: "About Lumen Ascend Shaders",
-                aboutText: "We create high-quality shaders that completely change the visual experience in Minecraft. Our goal is to bring stunning dynamic lighting, realistic water, and atmospheric effects to the game, allowing you to enjoy beauty without compromise.",
-                versionsTitle: "Our Shader Versions",
-                liteVersionTitle: "Lite Version",
-                liteVersionDesc: "Perfect for players with less powerful systems. Provides improved lighting, soft shadows, and atmospheric effects without significant performance impact.",
-                liteFeature1: "Optimized performance",
-                liteFeature2: "Basic dynamic lighting",
-                liteFeature3: "Improved clouds and sky",
-                liteFeature4: "Soft shadows",
-                downloadLite: "Download Lite",
-                proVersionTitle: "Pro Version",
-                proVersionDesc: "For those seeking maximum realism and visual splendor. Includes all advanced features for a complete immersion.",
-                proFeature1: "Full dynamic lighting and global illumination",
-                proFeature2: "Advanced realistic water (waves, reflections, refractions)",
-                proFeature3: "Volumetric clouds and fog",
-                proFeature4: "Animated vegetation (grass, foliage)",
-                proFeature5: "Extended sky effects (sunsets, auroras)",
-                downloadPro: "Download Pro",
-                footerCopyright: "&copy; 2025 Lumen Ascend Shaders. All rights reserved.",
-                footerDisclaimer: "The project is under development.",
-                // contactName: "Lolli", // Removed
-                // contactDetails: "21 years old, 3+ years of experience" // Removed
-            },
-            ru: {
-                siteTitle: "Lumen Ascend Shaders",
-                navVersions: "Версии",
-                // navContact: "Контакты", // Removed
-                languageButtonText: "Язык",
-                heroTitle: "Lumen Ascend Shaders",
-                heroSubtitle: "Преобрази свой мир Minecraft с невероятной графикой и реализмом.",
-                heroButton: "Выбрать версию",
-                aboutTitle: "О Lumen Ascend Shaders",
-                aboutText: "Мы создаем высококачественные шейдеры, которые полностью меняют визуальный опыт в Minecraft. Наша цель — привнести в игру потрясающее динамическое освещение, реалистичную воду и атмосферные эффекты, позволяя тебе наслаждаться красотой без компромиссов.",
-                versionsTitle: "Наши Версии Шейдеров",
-                liteVersionTitle: "Лайт версия",
-                liteVersionDesc: "Идеально подходит для игроков с менее мощными системами. Обеспечивает улучшенное освещение, мягкие тени и атмосферные эффекты без значительной нагрузки на производительность.",
-                liteFeature1: "Оптимизированная производительность",
-                liteFeature2: "Базовое динамическое освещение",
-                liteFeature3: "Улучшенные облака и небо",
-                liteFeature4: "Мягкие тени",
-                downloadLite: "Скачать Лайт",
-                proVersionTitle: "Про версия",
-                proVersionDesc: "Для тех, кто ищет максимальный реализм и визуальное великолепие. Включает в себя все передовые функции для полного погружения.",
-                proFeature1: "Полное динамическое освещение и глобальное освещение",
-                proFeature2: "Продвинутая реалистичная вода (волны, отражения, преломления)",
-                proFeature3: "Объемные облака и туман",
-                proFeature4: "Анимированная растительность (трава, листва)",
-                proFeature5: "Расширенные эффекты неба (закаты, сияния)",
-                downloadPro: "Скачать Про",
-                footerCopyright: "&copy; 2025 Lumen Ascend Shaders. Все права защищены.",
-                footerDisclaimer: "Проект находится на стадии разработки.",
-                // contactName: "Lolli", // Removed
-                // contactDetails: "21 год, более 3х лет работы" // Removed
-            },
-            uk: {
-                siteTitle: "Lumen Ascend Shaders",
-                navVersions: "Версії",
-                // navContact: "Контакти", // Removed
-                languageButtonText: "Мова",
-                heroTitle: "Lumen Ascend Shaders",
-                heroSubtitle: "Перетворіть свій світ Minecraft за допомогою неймовірної графіки та реалізму.",
-                heroButton: "Вибрати версію",
-                aboutTitle: "Про Lumen Ascend Shaders",
-                aboutText: "Ми створюємо високоякісні шейдери, які повністю змінюють візуальний досвід у Minecraft. Наша мета — привнести в гру приголомшливе динамічне освітлення, реалістичну воду та атмосферні ефекти, дозволяючи вам насолоджуватися красою без компромісів.",
-                versionsTitle: "Наші Версії Шейдерів",
-                liteVersionTitle: "Лайт версія",
-                liteVersionDesc: "Ідеально підходить для гравців з менш потужними системами. Забезпечує покращене освітлення, м'які тіні та атмосферні ефекти без значної навантаження на продуктивність.",
-                liteFeature1: "Оптимізована продуктивність",
-                liteFeature2: "Базове динамічне освітлення",
-                liteFeature3: "Покращені хмари та небо",
-                liteFeature4: "М'які тіні",
-                downloadLite: "Завантажити Лайт",
-                proVersionTitle: "Про версія",
-                proVersionDesc: "Для тих, хто шукає максимальний реалізм та візуальну пишність. Включає всі розширені функції для повного занурення.",
-                proFeature1: "Повне динамічне освітлення та глобальне освітлення",
-                proFeature2: "Розширена реалістична вода (хвилі, відбиття, заломлення)",
-                proFeature3: "Об'ємні хмари та туман",
-                proFeature4: "Анімована рослинність (трава, листя)",
-                proFeature5: "Розширені ефекти неба (заходи, полярні сяйва)",
-                downloadPro: "Завантажити Про" ,
-                footerCopyright: "&copy; 2025 Lumen Ascend Shaders. Усі права захищені.",
-                footerDisclaimer: "Проект знаходиться на стадії розробки.",
-                // contactName: "Lolli", // Removed
-                // contactDetails: "21 рік, більше 3х років роботи" // Removed
-            },
-            de: {
-                siteTitle: "Lumen Ascend Shaders",
-                navVersions: "Versionen",
-                // navContact: "Kontakt", // Removed
-                languageButtonText: "Sprache",
-                heroTitle: "Lumen Ascend Shaders",
-                heroSubtitle: "Verwandeln Sie Ihre Minecraft-Welt mit unglaublicher Grafik und Realismus.",
-                heroButton: "Version wählen",
-                aboutTitle: "Über Lumen Ascend Shaders",
-                aboutText: "Wir erstellen hochwertige Shader, die das visuelle Erlebnis in Minecraft komplett verändern. Unser Ziel ist es, atemberaubende dynamische Beleuchtung, realistisches Wasser und atmosphärische Effekte ins Spiel zu bringen, damit Sie Schönheit ohne Kompromisse genießen können.",
-                versionsTitle: "Unsere Shader-Versionen",
-                liteVersionTitle: "Lite-Version",
-                liteVersionDesc: "Perfekt für Spieler mit weniger leistungsstarken Systemen. Bietet verbesserte Beleuchtung, weiche Schatten und atmosphärische Effekte ohne nennenswerte Leistungseinbußen.",
-                liteFeature1: "Optimierte Leistung",
-                liteFeature2: "Grundlegende dynamische Beleuchtung",
-                liteFeature3: "Verbesserte Wolken und Himmel",
-                liteFeature4: "Weiche Schatten",
-                downloadLite: "Lite herunterladen",
-                proVersionTitle: "Pro-Version",
-                proVersionDesc: "Für diejenigen, die maximalen Realismus und visuelle Pracht suchen. Enthält alle erweiterten Funktionen für ein vollständiges Eintauchen.",
-                proFeature1: "Volle dynamische Beleuchtung und globale Beleuchtung",
-                proFeature2: "Fortschrittliches realistisches Wasser (Wellen, Reflexionen, Brechungen)",
-                proFeature3: "Volumetrische Wolken und Nebel",
-                proFeature4: "Animierte Vegetation (Gras, Laub)",
-                proFeature5: "Erweiterte Himmel Effekte (Sonnenuntergänge, Polarlichter)",
-                downloadPro: "Pro herunterladen",
-                footerCopyright: "&copy; 2025 Lumen Ascend Shaders. Alle Rechte vorbehalten.",
-                footerDisclaimer: "Das Projekt befindet sich in der Entwicklung.",
-                // contactName: "Lolli", // Removed
-                // contactDetails: "21 Jahre alt, mehr als 3 Jahre Erfahrung" // Removed
-            },
-            fr: {
-                siteTitle: "Lumen Ascend Shaders",
-                navVersions: "Versions",
-                // navContact: "Contact", // Removed
-                languageButtonText: "Langue",
-                heroTitle: "Lumen Ascend Shaders",
-                heroSubtitle: "Transformez votre monde Minecraft avec des graphismes et un réalisme incroyables.",
-                heroButton: "Choisir la version",
-                aboutTitle: "À propos de Lumen Ascend Shaders",
-                aboutText: "Nous créons des shaders de haute qualité qui transforment complètement l'expérience visuelle dans Minecraft. Notre objectif est d'apporter un éclairage dynamique époustouflant, de l'eau réaliste et des effets atmosphériques au jeu, vous permettant de profiter de la beauté sans compromis.",
-                versionsTitle: "Nos versions de Shaders",
-                liteVersionTitle: "Version Lite",
-                liteVersionDesc: "Parfait pour les joueurs avec des systèmes moins puissants. Offre un éclairage amélioré, des ombres douces et des effets atmosphériques sans impact significatif sur les performances.",
-                liteFeature1: "Performances optimisées",
-                liteFeature2: "Éclairage dynamique de base",
-                liteFeature3: "Nuages et ciel améliorés",
-                liteFeature4: "Ombres douces",
-                downloadLite: "Télécharger Lite",
-                proVersionTitle: "Version Pro",
-                proVersionDesc: "Pour ceux qui recherchent un réalisme maximal et une splendeur visuelle. Comprend toutes les fonctionnalités avancées pour une immersion complète.",
-                proFeature1: "Éclairage dynamique complet et illumination globale",
-                proFeature2: "Eau réaliste avancée (vagues, reflets, réfractions)",
-                proFeature3: "Nuages volumétriques et brouillard",
-                proFeature4: "Végétation animée (herbe, feuillage)",
-                proFeature5: "Effets de ciel étendus (couchers de soleil, aurores)",
-                downloadPro: "Télécharger Pro",
-                footerCopyright: "&copy; 2025 Lumen Ascend Shaders. Tous droits réservés.",
-                footerDisclaimer: "Le projet est en développement.",
-                // contactName: "Lolli", // Removed
-                // contactDetails: "21 ans, plus de 3 ans d'expérience" // Removed
-            },
-            'es-MX': {
-                siteTitle: "Lumen Ascend Shaders",
-                navVersions: "Versiones",
-                // navContact: "Contacto", // Removed
-                languageButtonText: "Idioma",
-                heroTitle: "Lumen Ascend Shaders",
-                heroSubtitle: "Transforma tu mundo de Minecraft con gráficos y realismo increíbles.",
-                heroButton: "Elegir versión",
-                aboutTitle: "Acerca de Lumen Ascend Shaders",
-                aboutText: "Creamos shaders de alta calidad que cambian por completo la experiencia visual en Minecraft. Nuestro objetivo es traer iluminación dinámica impresionante, agua realista y efectos atmosféricos al juego, permitiéndote disfrutar de la belleza sin compromisos.",
-                versionsTitle: "Nuestras Versiones de Shaders",
-                liteVersionTitle: "Versión Lite",
-                liteVersionDesc: "Perfecta para jugadores con sistemas menos potentes. Proporciona iluminación mejorada, sombras suaves y efectos atmosféricos sin un impacto significativo en el rendimiento.",
-                liteFeature1: "Rendimiento optimizado",
-                liteFeature2: "Iluminación dinámica básica",
-                liteFeature3: "Nubes y cielo mejorados",
-                liteFeature4: "Sombras suaves",
-                downloadLite: "Descargar Lite",
-                proVersionTitle: "Versión Pro",
-                proVersionDesc: "Para aquellos que buscan el máximo realismo y esplendor visual. Incluye todas las características avanzadas para una inmersión completa.",
-                proFeature1: "Iluminación dinámica completa e iluminación global",
-                proFeature2: "Agua realista avanzada (ondas, reflejos, refracciones)",
-                proFeature3: "Nubes volumétricas y niebla",
-                proFeature4: "Vegetación animada (hierba, follaje)",
-                proFeature5: "Efectos de cielo extendidos (atardeceres, auroras)",
-                downloadPro: "Descargar Pro",
-                footerCopyright: "&copy; 2025 Lumen Ascend Shaders. Todos los derechos reservados.",
-                footerDisclaimer: "El proyecto está en desarrollo.",
-                // contactName: "Lolli", // Removed
-                // contactDetails: "21 años, más de 3 años de experiencia" // Removed
+      <!-- КАРТОЧКА 3: ПОКЕР -->
+      <article class="game-card" data-game="poker" data-url="https://t.me/LollipopAIBot/pokergame">
+        <span class="corner-accent corner-tl" aria-hidden="true"></span>
+        <span class="corner-accent corner-tr" aria-hidden="true"></span>
+        <span class="corner-accent corner-bl" aria-hidden="true"></span>
+        <span class="corner-accent corner-br" aria-hidden="true"></span>
+
+        <div class="card-content">
+          <span class="game-badge badge-emerald">Hold'em &bull; VIP Стол</span>
+
+          <div class="icon-medallion" aria-hidden="true">
+            <!-- Векторная SVG-иконка: покерные карты и золотая фишка -->
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="goldChip" x1="34" y1="34" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#FFF2B2"/>
+                  <stop offset="50%" stop-color="#D4AF37"/>
+                  <stop offset="100%" stop-color="#8C6211"/>
+                </linearGradient>
+              </defs>
+              <!-- Задняя карта (Туз Червей) -->
+              <g transform="rotate(-14 26 30)">
+                <rect x="13" y="10" width="24" height="35" rx="4" fill="#FBF8F0" stroke="#D4AF37" stroke-width="1.6"/>
+                <path d="M25 22.5C23.5 20.4 20.3 20.9 20.3 23.5C20.3 26.2 25 29.4 25 29.4C25 29.4 29.7 26.2 29.7 23.5C29.7 20.9 26.5 20.4 25 22.5Z" fill="#C41E3A"/>
+                <text x="16" y="18" fill="#C41E3A" font-family="Georgia, serif" font-weight="700" font-size="7.5">A</text>
+              </g>
+              <!-- Передняя карта (Туз Пик) -->
+              <g transform="rotate(8 36 32)">
+                <rect x="24" y="11" width="25" height="36" rx="4" fill="#FFFFFF" stroke="#D4AF37" stroke-width="1.8"/>
+                <!-- Пика -->
+                <path d="M36.5 21.5C36.5 21.5 31.3 26.4 31.3 29.3C31.3 31.3 33 32.6 34.7 32.1C35.3 31.9 35.8 31.5 36.1 31.1C36 32.4 35.3 33.7 34.2 34.5H38.8C37.7 33.7 37 32.4 36.9 31.1C37.2 31.5 37.7 31.9 38.3 32.1C40 32.6 41.7 31.3 41.7 29.3C41.7 26.4 36.5 21.5 36.5 21.5Z" fill="#111816"/>
+                <text x="27" y="19.5" fill="#111816" font-family="Georgia, serif" font-weight="700" font-size="7.5">A</text>
+              </g>
+              <!-- Казино-фишка на переднем плане -->
+              <circle cx="46" cy="46" r="11" fill="#C41E3A" stroke="url(#goldChip)" stroke-width="2.4"/>
+              <circle cx="46" cy="46" r="7.4" fill="#0B1A15" stroke="#F9E076" stroke-width="1.2" stroke-dasharray="3.2 2.6"/>
+              <circle cx="46" cy="46" r="3" fill="url(#goldChip)"/>
+            </svg>
+          </div>
+
+          <h2 class="game-title">Покер</h2>
+          <p class="game-desc">
+            Хладнокровие, блеф и крупные банки. Займите место за элитным столом Техасского Холдема.
+          </p>
+        </div>
+
+        <a
+          href="https://t.me/LollipopAIBot/pokergame"
+          class="play-btn"
+          data-game-name="Покер"
+          data-tg-link="https://t.me/LollipopAIBot/pokergame"
+          aria-label="Играть в Покер"
+        >
+          <span class="btn-flash" aria-hidden="true"></span>
+          <span>Играть</span>
+          <svg class="play-btn-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M4.5 10H15.5M15.5 10L11 5.5M15.5 10L11 14.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </article>
+
+    </main>
+
+    <!-- Элегантный подвал -->
+    <footer class="lobby-footer">
+      <span class="footer-brand">Royal Lounge &bull; Monte Carlo &amp; Las Vegas</span>
+      <span>Премиальное игровое лобби &bull; Мгновенный вход в Telegram</span>
+    </footer>
+  </div>
+
+  <!-- Всплывающий индикатор перехода -->
+  <div id="toastNotice" class="toast-notice" role="status" aria-live="polite"></div>
+
+  <script>
+    /**
+     * ==========================================================================
+     * ИНИЦИАЛИЗАЦИЯ TELEGRAM MINI APP, НАВИГАЦИЯ И ВИЗУАЛЬНЫЕ ЭФФЕКТЫ
+     * ==========================================================================
+     */
+    (function () {
+      'use strict';
+
+      // Безопасное получение объекта Telegram WebApp
+      const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+
+      /**
+       * Проверяем, действительно ли страница открыта внутри Telegram Mini App
+       * (в обычном браузере скрипт telegram-web-app.js создаёт пустой объект с initData === '')
+       */
+      const isInsideTelegram = Boolean(
+        tg && (
+          (typeof tg.initData === 'string' && tg.initData.length > 0) ||
+          (tg.platform && tg.platform !== 'unknown')
+        )
+      );
+
+      // Настройка внешнего вида Telegram Mini App при запуске внутри Telegram
+      if (tg) {
+        try {
+          if (typeof tg.ready === 'function') {
+            tg.ready();
+          }
+          if (typeof tg.expand === 'function') {
+            tg.expand();
+          }
+          if (typeof tg.setHeaderColor === 'function') {
+            tg.setHeaderColor('#040d0a');
+          }
+          if (typeof tg.setBackgroundColor === 'function') {
+            tg.setBackgroundColor('#030807');
+          }
+        } catch (err) {
+          console.warn('Telegram WebApp initialization warning:', err);
+        }
+      }
+
+      /**
+       * Ненавязчивое уведомление о переходе в игру
+       */
+      const toastEl = document.getElementById('toastNotice');
+      let toastTimer = null;
+
+      function showToast(message) {
+        if (!toastEl) return;
+        toastEl.textContent = message;
+        toastEl.classList.add('visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toastEl.classList.remove('visible');
+        }, 2200);
+      }
+
+      /**
+       * Универсальная функция перехода в игру:
+       * - Внутри Telegram Mini App использует tg.openTelegramLink(url) + HapticFeedback
+       * - В обычном браузере выполняет стандартный переход по ссылке https://t.me/...
+       */
+      function navigateToGame(url, gameName) {
+        if (!url) return;
+
+        showToast(`Открываем «${gameName}»...`);
+
+        if (isInsideTelegram && tg && typeof tg.openTelegramLink === 'function') {
+          try {
+            // Тактильная вибрация в Telegram Mini App
+            if (tg.HapticFeedback && typeof tg.HapticFeedback.impactOccurred === 'function') {
+              tg.HapticFeedback.impactOccurred('medium');
             }
-        };
-
-        function setLanguage(lang) {
-            document.querySelectorAll('[data-key]').forEach(element => {
-                const key = element.getAttribute('data-key');
-                if (translations[lang] && translations[lang][key]) {
-                    element.innerHTML = translations[lang][key];
-                }
-            });
-            document.documentElement.lang = lang; // Update HTML lang attribute
+            tg.openTelegramLink(url);
+            return;
+          } catch (err) {
+            console.warn('openTelegramLink fallback:', err);
+          }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Automatic language detection
-            const userLang = navigator.language || navigator.userLanguage; // Get browser language
-            let defaultLang = 'en'; // Fallback default
+        // Стандартный переход для обычного браузера
+        try {
+          window.location.href = url;
+        } catch (err) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      }
 
-            // Check for specific language codes
-            if (userLang.startsWith('ru')) {
-                defaultLang = 'ru';
-            } else if (userLang.startsWith('uk')) {
-                defaultLang = 'uk';
-            } else if (userLang.startsWith('de')) {
-                defaultLang = 'de';
-            } else if (userLang.startsWith('fr')) {
-                defaultLang = 'fr';
-            } else if (userLang.startsWith('es')) { // Catch all Spanish variants, then refine for es-MX
-                defaultLang = 'es-MX'; // Prioritize es-MX if any Spanish is detected
-            } else if (userLang.startsWith('en')) {
-                defaultLang = 'en';
-            }
-            setLanguage(defaultLang);
+      /**
+       * Привязка обработчиков к кнопкам «Играть» и карточкам
+       */
+      const playButtons = document.querySelectorAll('.play-btn');
+      const gameCards = document.querySelectorAll('.game-card');
 
-            const languageToggle = document.getElementById('languageToggle');
-            const languageDropdownContent = document.getElementById('languageDropdownContent');
-            const mainNav = document.getElementById('mainNav');
-            // const contactLink = document.getElementById('contactLink'); // Removed
-            // const mainContentWrapper = document.getElementById('mainContentWrapper'); // Removed
-            // const contactPage = document.getElementById('contact-page'); // Removed
+      function triggerButtonPress(btn, url, gameName) {
+        btn.classList.add('is-pressed');
+        setTimeout(() => {
+          btn.classList.remove('is-pressed');
+        }, 220);
 
-            // Set initial state for navbar
-            mainNav.classList.add('nav-initial');
+        // Короткая пауза для отображения тактильной вспышки перед переходом
+        setTimeout(() => {
+          navigateToGame(url, gameName);
+        }, 120);
+      }
 
-            // Toggle dropdown visibility on button click
-            languageToggle.addEventListener('click', (event) => {
-                event.stopPropagation(); // Prevent click from bubbling up to document and closing immediately
-                languageDropdownContent.classList.toggle('show');
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (event) => {
-                if (!languageDropdownContent.contains(event.target) && !languageToggle.contains(event.target)) {
-                    languageDropdownContent.classList.remove('show');
-                }
-            });
-
-            // Set language when a language option is clicked
-            document.querySelectorAll('.lang-option').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    const lang = event.target.getAttribute('data-lang');
-                    setLanguage(lang);
-                    languageDropdownContent.classList.remove('show'); // Close dropdown after selection
-                });
-            });
-
-            // --- Navbar Scroll Animation Logic ---
-            const scrollThreshold = 50; // Pixels scrolled down to trigger animation
-
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > scrollThreshold) {
-                    mainNav.classList.remove('nav-initial');
-                    mainNav.classList.add('nav-scrolled');
-                } else {
-                    mainNav.classList.remove('nav-scrolled');
-                    mainNav.classList.add('nav-initial');
-                }
-            });
-
-            // --- Scroll Reveal Animation Logic ---
-            const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                        observer.unobserve(entry.target); // Stop observing once visible
-                    }
-                });
-            }, { threshold: 0.1 }); // Trigger when 10% of element is visible
-
-            scrollRevealElements.forEach(element => {
-                observer.observe(element);
-            });
-
-            // --- Removed Contact Page Toggle Logic ---
-            // The contactLink, mainContentWrapper, and contactPage elements are removed,
-            // so their related JavaScript logic is also removed.
+      playButtons.forEach((btn) => {
+        btn.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const url = btn.getAttribute('data-tg-link') || btn.getAttribute('href');
+          const gameName = btn.getAttribute('data-game-name') || 'Игру';
+          triggerButtonPress(btn, url, gameName);
         });
-    </script>
+      });
+
+      // Клик по самой карточке также запускает игру и обновляет световое пятно на десктопе
+      gameCards.forEach((card) => {
+        card.addEventListener('click', (event) => {
+          // Если кликнули непосредственно по кнопке — её обработчик уже сработал
+          if (event.target.closest('.play-btn')) return;
+          const btn = card.querySelector('.play-btn');
+          if (!btn) return;
+          const url = btn.getAttribute('data-tg-link') || card.getAttribute('data-url');
+          const gameName = btn.getAttribute('data-game-name') || 'Игру';
+          triggerButtonPress(btn, url, gameName);
+        });
+
+        // Интерактивный золотой блик, следящий за курсором мыши
+        card.addEventListener('mousemove', (event) => {
+          const rect = card.getBoundingClientRect();
+          const x = ((event.clientX - rect.left) / rect.width) * 100;
+          const y = ((event.clientY - rect.top) / rect.height) * 100;
+          card.style.setProperty('--mouse-x', `${x.toFixed(1)}%`);
+          card.style.setProperty('--mouse-y', `${y.toFixed(1)}%`);
+        });
+      });
+
+      /**
+       * ========================================================================
+       * ФОНОВАЯ АНИМАЦИЯ МЕРЦАЮЩИХ ЗОЛОТЫХ ЧАСТИЦ НА CANVAS
+       * ========================================================================
+       */
+      const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const canvas = document.getElementById('goldParticles');
+
+      if (canvas && !prefersReducedMotion) {
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let width = 0;
+        let height = 0;
+        let animationFrameId = null;
+
+        function resizeCanvas() {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          width = window.innerWidth;
+          height = window.innerHeight;
+          canvas.width = Math.floor(width * dpr);
+          canvas.height = Math.floor(height * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          initParticles();
+        }
+
+        function createParticle() {
+          const isGold = Math.random() > 0.18;
+          return {
+            x: Math.random() * width,
+            y: Math.random() * height,
+            radius: Math.random() * 2.1 + 0.6,
+            speedY: -(Math.random() * 0.28 + 0.08),
+            speedX: (Math.random() - 0.5) * 0.2,
+            alpha: Math.random() * 0.55 + 0.15,
+            pulseSpeed: Math.random() * 0.02 + 0.008,
+            pulsePhase: Math.random() * Math.PI * 2,
+            color: isGold ? '249, 224, 118' : '212, 175, 55'
+          };
+        }
+
+        function initParticles() {
+          // Умеренное количество частиц для высокой производительности на смартфонах
+          const count = Math.min(Math.floor((width * height) / 24000), 48);
+          particles = Array.from({ length: Math.max(count, 18) }, createParticle);
+        }
+
+        function animateParticles() {
+          ctx.clearRect(0, 0, width, height);
+
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            p.y += p.speedY;
+            p.x += p.speedX;
+            p.pulsePhase += p.pulseSpeed;
+
+            // Мягкий перезапуск частицы снизу при выходе за верхнюю границу
+            if (p.y < -10) {
+              p.y = height + 10;
+              p.x = Math.random() * width;
+            }
+            if (p.x < -10) p.x = width + 10;
+            if (p.x > width + 10) p.x = -10;
+
+            const currentAlpha = Math.max(0.05, p.alpha * (0.65 + 0.35 * Math.sin(p.pulsePhase)));
+
+            // Мягкое свечение вокруг золотой искры
+            const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 3.4);
+            glow.addColorStop(0, `rgba(${p.color}, ${currentAlpha})`);
+            glow.addColorStop(1, `rgba(${p.color}, 0)`);
+
+            ctx.beginPath();
+            ctx.fillStyle = glow;
+            ctx.arc(p.x, p.y, p.radius * 3.4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          animationFrameId = window.requestAnimationFrame(animateParticles);
+        }
+
+        // Пауза анимации при сворачивании вкладки для экономии заряда батареи
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden && animationFrameId) {
+            window.cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+          } else if (!document.hidden && !animationFrameId) {
+            animateParticles();
+          }
+        });
+
+        window.addEventListener('resize', resizeCanvas, { passive: true });
+        resizeCanvas();
+        animateParticles();
+      }
+    })();
+  </script>
 </body>
 </html>
